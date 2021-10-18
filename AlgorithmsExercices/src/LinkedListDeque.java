@@ -15,8 +15,8 @@ import java.util.*;
 
 public class LinkedListDeque<Item> implements Iterable<Item> {
    int N;
-   Node head;
-   Node tail;
+   private Node head;
+   private Node tail;
 
    public static void main(String[] args) {
 
@@ -93,8 +93,6 @@ public class LinkedListDeque<Item> implements Iterable<Item> {
    void pushLeft(Item item){
       if(head == null){
          head = new Node(item);
-         head.previous = null;
-         head.next = null;
          tail = head;
       }
       else {
@@ -107,8 +105,6 @@ public class LinkedListDeque<Item> implements Iterable<Item> {
    void pushRight(Item item){
       if(tail == null){
          tail = new Node(item);
-         tail.previous = null;
-         tail.next = null;
          head = tail;
       }
       else {
@@ -120,7 +116,7 @@ public class LinkedListDeque<Item> implements Iterable<Item> {
 
    Item popLeft(){
       if(head == null)
-         throw new ArrayIndexOutOfBoundsException();
+         throw new NoSuchElementException();
 
       Item item = head.item;
       head = head.next;
@@ -134,7 +130,7 @@ public class LinkedListDeque<Item> implements Iterable<Item> {
 
    Item popRight(){
       if(head == null)
-         throw new ArrayIndexOutOfBoundsException();
+         throw new NoSuchElementException();
 
       Item item = tail.item;
       tail = tail.previous;
@@ -147,9 +143,9 @@ public class LinkedListDeque<Item> implements Iterable<Item> {
    }
 
    private class Node{
-      Item item;
-      Node next;
-      Node previous;
+      private final Item item;
+      private Node next;
+      private Node previous;
       Node(Item item){this.item = item;}
       Node(Item item,Node previous,Node next){this.item = item;this.previous = previous; this.next = next;}
    }

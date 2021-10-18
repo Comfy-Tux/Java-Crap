@@ -48,16 +48,19 @@ public class QueueCircularLinkedList<Item> implements Iterable<Item>{
    Item dequeue(){
       N--;
       if(last == null)
-         throw new ArrayIndexOutOfBoundsException();
+         throw new NoSuchElementException();
+      Item item;
 
-      if(last.next == last){
-         Item item = last.item;
+      if(last.next == last)
+      {
+         item = last.item;
          last = null;
-         return item;
       }
-
-      Item item = last.next.item;
-      last.next = last.next.next;
+      else
+      {
+         item = last.next.item;
+         last.next = last.next.next;
+      }
 
       return item;
    }
