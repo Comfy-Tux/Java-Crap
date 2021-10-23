@@ -3,11 +3,14 @@ package aed.collections;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.stream.*;
 
+
+@SuppressWarnings("uncheked")
 public class UnrolledLinkedList<Item> implements IList<Item>{
-   private int blockSize = 16;
+   private int blockSize = 1024;
    private Node head;
    private Node tail;
    private int N;
@@ -21,6 +24,7 @@ public class UnrolledLinkedList<Item> implements IList<Item>{
       var list = new UnrolledLinkedList<Integer>(5);
       for(int i = 0; i < 100 ; i++)
          list.add(i);
+
       for(Integer a: list){
          System.out.print(a + " ");
       }
@@ -38,15 +42,17 @@ public class UnrolledLinkedList<Item> implements IList<Item>{
       Object[][] matrix = list.getArrayOfBlocks();
       Arrays.stream(matrix).map(Arrays::toString).forEach(System.out::println);
 
+
       //add is O(N) time elapsed wildly between 0.1 and 0.8 , the reason why this happens because add time is highly
       //dependent on the block size ,so it varies somewhat wildly , even though is slower than get.
-      double efficiency = Trial.add(100000,20,10000,1024);
+      double efficiency = DoublingRatioTest.add(1000);
       System.out.println(" Time elapsed = " + efficiency + " and log is : " + (Math.log(efficiency) / Math.log(2)));
 
       //get is O(N) time elapsed is around 2 and 2.4 , this is more consistent as the time is as dependent on the
       // blockSize as the add function although the higher the blockSize the faster is get most of the time.
-      double efficiency2 = Trial.get(100000,20,100000,1024);
+      double efficiency2 = DoublingRatioTest.get(1000);
       System.out.println(" Time elapsed = " + efficiency2 + " and log is : " + (Math.log(efficiency2) / Math.log(2)));
+
 
       //conclusion the best blockSize that I found is 1024
    }
@@ -115,7 +121,7 @@ public class UnrolledLinkedList<Item> implements IList<Item>{
 
    public Item remove() {
       if(N == 0)
-         throw new ArrayIndexOutOfBoundsException();
+         return null;
 
       Item item = tail.remove();
       //if block is empty delete node
@@ -138,7 +144,7 @@ public class UnrolledLinkedList<Item> implements IList<Item>{
 
    public Item remove(int index) {
       if(N == 0 || index >= N)
-         throw new ArrayIndexOutOfBoundsException();
+         return null;
 
       int currentIndex = findIndexNode(index,head);
 
@@ -176,7 +182,7 @@ public class UnrolledLinkedList<Item> implements IList<Item>{
 
    public Item get(int index) {
       if(N == 0 || index >= N)
-         throw new ArrayIndexOutOfBoundsException();
+         return null;
 
       int currentIndex = findIndexNode(index,head);
 
@@ -185,7 +191,7 @@ public class UnrolledLinkedList<Item> implements IList<Item>{
 
    public void set(int index, Item element) {
       if(N == 0 || index >= N)
-         throw new ArrayIndexOutOfBoundsException();
+         return;
 
       int currentIndex = findIndexNode(index,head);
 
@@ -195,6 +201,9 @@ public class UnrolledLinkedList<Item> implements IList<Item>{
    public IList<Item> shallowCopy() {
       var list = new UnrolledLinkedList<Item>(blockSize);
       list.head = head;
+      list.tail = tail;
+      list.N = N;
+      list.blockSize = blockSize;
 
       return list;
    }
@@ -235,7 +244,6 @@ public class UnrolledLinkedList<Item> implements IList<Item>{
          i++;
       }
 
-      @SuppressWarnings("uncheked")
       Item[][] matrix = (Item[][]) new Object[i][blockSize];
 
       current = head;
@@ -295,9 +303,7 @@ public class UnrolledLinkedList<Item> implements IList<Item>{
        int counter;
        Node next;
 
-      @SuppressWarnings("uncheked")
       Node(){itemArray = (Item[]) new Object[blockSize]; }
-      @SuppressWarnings("unckeked")
       Node(Node next){itemArray = (Item[]) new Object[blockSize]; this.next = next;}
 
       //adds an item to the array
@@ -352,75 +358,64 @@ public class UnrolledLinkedList<Item> implements IList<Item>{
       }
    }
 
-   private static class Trial{
-      public static double add(int N, int nTimes,int singleTime, int blockSize){
-         int i = 0;
-         double result = 0;
-         var list = new UnrolledLinkedList<Double>(blockSize);
-         var array = randomDoubleArray(N);
-         for(int j = 0 ; j < N; j++)
-            list.add(array[j]);
+   private static class DoublingRatioTest {
+      private static double addTimeTrial(int N , UnrolledLinkedList<Double> list){
 
-         while(i < nTimes) {
-            int x = (int) (Math.random() * N);
-            int y = x / 2;
-
-            var stopwatch = new Stopwatch();
-               for(int j = 0; j < singleTime; j++)
-                  list.addAt(y, 0.0);
-            double halfTime = stopwatch.elapsedTime() / singleTime;
-
-            for(int j = 0; j < singleTime; j++) {
-                  list.remove();
-               }
-
-            var stopwatch2 = new Stopwatch();
-            for(int j = 0; j < singleTime; j++)
-                  list.addAt(x,0.0);
-            double fullTime = stopwatch2.elapsedTime() / singleTime;
-
-            for(int j = 0; j < singleTime; j++){
-               list.remove();
-            }
-
-            result += fullTime / halfTime;
-            i++;
-         }
-
-         return result/nTimes;
+         Stopwatch timer = new Stopwatch();
+         list.addAt(N,0.0);
+         return timer.elapsedTime();
       }
 
-      public static double get(int N, int nTimes,int singleTime, int blockSize){
-         double result = 0;
-         var list = new UnrolledLinkedList<Double>(blockSize);
-         var array = randomDoubleArray(N);
-         for(int j = 0 ; j < N; j++)
-            list.add(array[j]);
+      public static double add(long N) {
+         int size = 20000000;
+         var array = randomDoubleArray(size);
+         var list = new UnrolledLinkedList<Double>();
 
-         int i = 0;
-         while(i < nTimes) {
+         for(Double a : array)
+            list.add(a);
 
-            int x = (int) (Math.random() * N);
-            int y = x / 2;
-
-            var stopwatch = new Stopwatch();
-            for(int j = 0; j < singleTime; j++)
-               list.get(y);
-            double halfTime = stopwatch.elapsedTime() / singleTime;
-
-            var stopwatch2 = new Stopwatch();
-            for(int j = 0; j < singleTime; j++)
-               list.get(x);
-            double fullTime = stopwatch2.elapsedTime() / singleTime;
-
-            result += fullTime / halfTime;
-            i++;
+         double total = 0;
+         for(int i = 0; i < N; i++) {
+            double prev = addTimeTrial(10000000, list);
+            double current = addTimeTrial(20000000, list);
+            double ratio = current / prev;
+            total += ratio;
+//            System.out.printf("previous = %.5f , next = %.5f , ratio = %.5f , O(N) = %.5f\n",
+//                    prev,current,ratio,Math.log(ratio)/Math.log(2));
          }
-
-         return result/nTimes;
+         return total / ((double)N);
       }
 
-      public static double[] randomDoubleArray(int N){
+      private static double getTimeTrial(int N , UnrolledLinkedList<Double> list){
+
+         Stopwatch timer = new Stopwatch();
+         list.get(N);
+         return timer.elapsedTime();
+      }
+
+      public static double get(long N) {
+         int size = 20000002;
+         var array = randomDoubleArray(size);
+         var list = new UnrolledLinkedList<Double>();
+
+         for(Double a : array)
+            list.add(a);
+
+         double total = 0;
+         for(int i = 0; i < N; i++) {
+            double prev = getTimeTrial(10000000, list);
+            double current = getTimeTrial(20000000, list);
+            double ratio = current / prev;
+            total += ratio;
+//            System.out.printf("previous = %.5f , next = %.5f , ratio = %.5f , O(N) = %.5f\n",
+//                    prev,current,ratio,Math.log(ratio)/Math.log(2));
+         }
+         return total / ((double)N);
+      }
+
+
+
+      private static double[] randomDoubleArray(int N){
          var array = new double[N];
          for(int i = 0; i < N ; i++)
             array[i] = Math.random();

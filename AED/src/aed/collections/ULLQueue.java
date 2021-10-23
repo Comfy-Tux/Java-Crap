@@ -1,11 +1,12 @@
 package aed.collections;
 
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 public class ULLQueue<Item> implements  IQueue<Item> {
    Node head;
    Node tail;
-   int blockSize = 16;
+   int blockSize = 1024;
    int N;
 
    public static void main(String[] args) {
@@ -42,8 +43,14 @@ public class ULLQueue<Item> implements  IQueue<Item> {
       }
       System.out.println();
 
-      double efficiency = Trial.enqueue(100000,20,1000000,1024);
+      //O(1)
+      double efficiency = DoublingRatioTest.enqueue(100);
       System.out.println(" Time elapsed = " + efficiency + " and log is : " + (Math.log(efficiency) / Math.log(2)));
+
+      //O(1)
+      double efficiency2 = DoublingRatioTest.dequeue(100);
+      System.out.println(" Time elapsed = " + efficiency2 + " and log is : " + (Math.log(efficiency2) / Math.log(2)));
+
    }
 
    ULLQueue() {
@@ -73,7 +80,7 @@ public class ULLQueue<Item> implements  IQueue<Item> {
 
    public Item dequeue() {
       if(head == null || N == 0)
-         throw new ArrayIndexOutOfBoundsException();
+         return null;
 
       Item item = head.remove();
       if(head.isEmpty())
@@ -82,8 +89,7 @@ public class ULLQueue<Item> implements  IQueue<Item> {
       return item;
    }
 
-   public Item peek() {
-      return head.peek();
+   public Item peek() {return head.peek();
    }
 
    public boolean isEmpty() {
@@ -97,6 +103,9 @@ public class ULLQueue<Item> implements  IQueue<Item> {
    public IQueue<Item> shallowCopy() {
       var list = new ULLQueue<Item>(blockSize);
       list.head = head;
+      list.tail = tail;
+      list.N = N;
+      list.blockSize = N;
 
       return list;
    }
@@ -160,6 +169,8 @@ public class ULLQueue<Item> implements  IQueue<Item> {
       }
 
       public Item peek() {
+         if(counter == 0)
+            return null;
          return itemArray[removed];
       }
 
@@ -182,55 +193,96 @@ public class ULLQueue<Item> implements  IQueue<Item> {
 
       public double elapsedTime() {
          long now = System.currentTimeMillis();
-         return (now - start) / 1000.0;
+         return (now - start)/1000.0;
       }
    }
 
-   private static class Trial {
-      public static double enqueue(int N, int nTimes,int singleTime ,int blockSize) {
-         int i = 0;
-         double result = 0;
-         var queue = new ULLQueue<Double>(blockSize);
-         var array = randomDoubleArray(N);
-         for(int j = 0 ; j < N/2; j++)
-            queue.enqueue(array[j]);
+   private static class DoublingRatioTest {
 
-         while(i < nTimes) {
-            int x = (int) (Math.random() * N);
-            int y = x / 2;
+      //the queue size is N
+      private static double enqueueTimeTrial(ULLQueue<Double> queue) {
 
-            var stopwatch = new Stopwatch();
-            for(int j = 0; j < singleTime; j++)
-               queue.enqueue(0.0);
-            double halfTime = stopwatch.elapsedTime() / singleTime;
+         Stopwatch timer = new Stopwatch();
+       for(int i = 0 ; i < 100000 ; i++)
+         queue.enqueue(0.0);
+         return timer.elapsedTime();
+      }
 
-            for(int j = N/2 + singleTime; j < N ; j++){
-               queue.enqueue(array[j]);
+      public static double enqueue(long N) {
+         int size = 20000000;
+         var array = randomDoubleArray(size);
+         var halfQueue = new ULLQueue<Double>();
+         var fullQueue = new ULLQueue<Double>();
+
+         int halfSize = size / 2;
+         for(int i = 0; i < halfSize; i++)
+            halfQueue.enqueue(array[i]);
+
+         for(Double a : array)
+            fullQueue.enqueue(a);
+
+         double total = 0;
+         for(int i = 0; i < N; i++) {
+            if(i % 10 == 0) System.gc();
+            double prev = enqueueTimeTrial(halfQueue);
+            double current = enqueueTimeTrial(fullQueue);
+            for(int j = 0; j < 100000 ; j++) {
+               halfQueue.dequeue();
+               fullQueue.dequeue();
             }
-
-            var stopwatch2 = new Stopwatch();
-            for(int j = 0; j < singleTime; j++)
-               queue.enqueue(0.0);
-            double fullTime = stopwatch2.elapsedTime() / singleTime;
-
-            for(int j = 0; j < N/2; j++){
-               queue.dequeue();
-            }
-
-            result += fullTime / halfTime;
-            i++;
+            double ratio = current / prev;
+            total += ratio;
+   //         System.out.printf("previous = %.10f , next = %.10f , ratio = %.5f , O(N) = %.5f\n",
+     //               prev,current,ratio,Math.log(ratio)/Math.log(2));
          }
+         return total / ((double) N);
+      }
 
-         return result/nTimes;
+      //the queue size is N
+      private static double dequeueTimeTrial(ULLQueue<Double> queue) {
+
+         Stopwatch timer = new Stopwatch();
+         for(int i = 0 ; i < 400000 ; i++)
+            queue.dequeue();
+         return timer.elapsedTime();
+      }
+
+      public static double dequeue(long N) {
+         int size = 20000000;
+         var array = randomDoubleArray(size);
+         var halfQueue = new ULLQueue<Double>();
+         var fullQueue = new ULLQueue<Double>();
+
+         int halfSize = size / 2;
+         for(int i = 0; i < halfSize; i++)
+            halfQueue.enqueue(array[i]);
+
+         for(Double a : array)
+            fullQueue.enqueue(a);
+
+         double total = 0;
+         for(int i = 0; i < N; i++) {
+            if(i % 10 == 0) System.gc();
+            double prev = dequeueTimeTrial(halfQueue);
+            double current = dequeueTimeTrial(fullQueue);
+            for(int j = 0; j < 400000 ; j++) {
+               halfQueue.enqueue(0.0);
+               fullQueue.enqueue(0.0);
+            }
+            double ratio = current / prev;
+            total += ratio;
+                     System.out.printf("previous = %.10f , next = %.10f , ratio = %.5f , O(N) = %.5f\n",
+                          prev,current,ratio,Math.log(ratio)/Math.log(2));
+         }
+         return total / ((double) N);
       }
    }
 
-   public static double[] randomDoubleArray(int N){
+   public static double[] randomDoubleArray(int N) {
       var array = new double[N];
-      for(int i = 0; i < N ; i++)
+      for(int i = 0; i < N; i++)
          array[i] = Math.random();
 
       return array;
    }
-
 }
