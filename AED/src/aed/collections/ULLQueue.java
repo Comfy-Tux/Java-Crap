@@ -1,48 +1,42 @@
 package aed.collections;
 
-import java.util.Iterator;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 public class ULLQueue<Item> implements  IQueue<Item> {
-   Node head;
-   Node tail;
-   int blockSize = 1024;
-   int N;
+   private Node head;
+   private Node tail;
+   private int blockSize = 1024;
+   private int N;
 
    public static void main(String[] args) {
-      var list = new ULLQueue<Integer>(4);
-      for(int i = 0; i < 100; i++)
-         list.enqueue(i);
-      for(Integer a : list) {
-         System.out.print(a + " ");
-      }
-      System.out.println();
+      var queue = new ULLQueue<Integer>(4);
 
+      for(int i = 0; i < 10 ; i++)
+         queue.enqueue(i);
 
-      System.out.println(list.dequeue());
-      System.out.println(list.dequeue());
-      System.out.println(list.dequeue());
-      System.out.println(list.dequeue());
-      System.out.println(list.dequeue());
+      var queue2 = new ULLQueue<Boolean>(1);
 
-      list.enqueue(555);
-      list.enqueue(333);
+      queue2.enqueue(true);
+      System.out.println(queue2.peek());
+      queue2.enqueue(false);
 
-      for(Integer a : list) {
-         System.out.print(a + " ");
-      }
-      System.out.println();
-      System.out.println(list.peek());
+      queue2.enqueue(true);
 
-      System.out.println(list.dequeue());
-      System.out.println(list.dequeue());
-      System.out.println(list.dequeue());
+      System.out.println(queue2.peek());
+      System.out.println(queue2.peek());
+      queue2.dequeue();
+      queue2.dequeue();
+      queue2.dequeue();
+      System.out.println(queue2.peek());
+      queue2.enqueue(false);
+      queue2.enqueue(true);
+      System.out.println( queue2.peek());
+      queue2.dequeue();
+      System.out.println( queue2.peek());
 
-      for(Integer a : list) {
-         System.out.print(a + " ");
-      }
-      System.out.println();
+      System.out.println(queue2.toString());
 
+/*
       //O(1)
       double efficiency = DoublingRatioTest.enqueue(100);
       System.out.println(" Time elapsed = " + efficiency + " and log is : " + (Math.log(efficiency) / Math.log(2)));
@@ -50,13 +44,14 @@ public class ULLQueue<Item> implements  IQueue<Item> {
       //O(1)
       double efficiency2 = DoublingRatioTest.dequeue(100);
       System.out.println(" Time elapsed = " + efficiency2 + " and log is : " + (Math.log(efficiency2) / Math.log(2)));
+*/
 
    }
 
-   ULLQueue() {
+   public ULLQueue() {
    }
 
-   ULLQueue(int blockSize) {
+   public ULLQueue(int blockSize) {
       this.blockSize = blockSize;
    }
 
@@ -68,10 +63,10 @@ public class ULLQueue<Item> implements  IQueue<Item> {
          head = tail;
       } else {
          if(tail.isFull()) {
-            Node newTail = new Node();
-            newTail.add(item);
-            tail.next = newTail;
-            tail = newTail;
+            Node oldTail = tail;
+            tail = new Node();
+            tail.add(item);
+            oldTail.next = tail;
          } else
             tail.add(item);
       }
@@ -79,17 +74,23 @@ public class ULLQueue<Item> implements  IQueue<Item> {
    }
 
    public Item dequeue() {
-      if(head == null || N == 0)
+      if(head == null)
          return null;
 
       Item item = head.remove();
-      if(head.isEmpty())
+      if(head.isEmpty()) {
+         if(head == tail)
+            tail = null;
          head = head.next;
+      }
       N--;
       return item;
    }
 
-   public Item peek() {return head.peek();
+   public Item peek() {
+      if(tail == null)
+         return null;
+      return tail.itemArray[tail.counter -1];
    }
 
    public boolean isEmpty() {
@@ -100,23 +101,47 @@ public class ULLQueue<Item> implements  IQueue<Item> {
       return N;
    }
 
-   public IQueue<Item> shallowCopy() {
-      var list = new ULLQueue<Item>(blockSize);
-      list.head = head;
-      list.tail = tail;
-      list.N = N;
-      list.blockSize = N;
-
-      return list;
+   public ULLQueue<Item> shallowCopy() {
+      var queue = new ULLQueue<Item>(blockSize);
+      if(N != 0){
+         queue.head = head.shallowCopy();
+         queue.N = N;
+         Node current = head;
+         Node altCurrent = queue.head;
+         while(current.next != null) {
+            altCurrent.next = current.next.shallowCopy();
+            altCurrent = altCurrent.next;
+            current = current.next;
+         }
+         queue.tail = altCurrent.next;
+      }
+      return queue;
    }
 
+   public String toString(){
+      if(head == null)
+         return "[]";
+      Node current = head;
+      var result = new StringBuilder("[");
+      result.append(head.toString());
+      current = current.next;
+      while(current != null){
+         result.append(",").append(current.toString());
+         current = current.next;
+      }
+      return result.append("]").toString();
+   }
+
+   ///////////////////// ITERATOR ///////////////////////////////////////////////////////
    public Iterator<Item> iterator() {
       return new ULLQueueIterator();
    }
 
    private class ULLQueueIterator implements Iterator<Item> {
-      Node current = head;
-      int globalIndex = current.removed;
+      private Node current = head;
+      private int globalIndex = 0;
+
+      public ULLQueueIterator(){if(head != null) globalIndex = head.removed;}
 
       public boolean hasNext() {
          return current != null;
@@ -135,26 +160,22 @@ public class ULLQueue<Item> implements  IQueue<Item> {
          return item;
       }
 
-      public void delete() {
-      }
    }
+   //////////////////////// END OF ITERATOR ///////////////////////////////////////////
+
+   //////////////////////// NODE ////////////////////////////////////////////////////////
 
    private class Node {
-      Item[] itemArray;
-      int counter;
-      int removed; //index for the elements that have been removed from the queue
-      Node next;
+      private Item[] itemArray;
+      private int counter;
+      private int removed; //index for the elements that have been removed from the queue
+      private Node next;
 
       @SuppressWarnings("unchecked")
-      Node() {
+      public Node() {
          itemArray = (Item[]) new Object[blockSize];
       }
 
-      @SuppressWarnings("unchecked")
-      Node(Node next) {
-         itemArray = (Item[]) new Object[blockSize];
-         this.next = next;
-      }
 
       public void add(Item item) {
          itemArray[counter] = item;
@@ -169,21 +190,44 @@ public class ULLQueue<Item> implements  IQueue<Item> {
       }
 
       public Item peek() {
-         if(counter == 0)
-            return null;
-         return itemArray[removed];
+         return itemArray[counter -1 ];
       }
 
-      boolean isFull() {
+      public boolean isFull() {
          return counter == itemArray.length;
       }
 
-      boolean isEmpty() {
+      public boolean isEmpty() {
          return counter == 0 || removed == counter;
       }
 
-   }
+      //there is no need to copy next as it will be modified later .
+      public Node shallowCopy(){
+         Node result = new Node();
+         result.counter = counter;
+         result.removed = removed;
+         for(int i = removed ; i < counter ; i++){
+            result.itemArray[i] = itemArray[i];
+         }
+         return result;
+      }
 
+      public String toString(){
+         StringBuilder result = new StringBuilder("[");
+
+         if(counter > 0)
+            result.append(itemArray[removed].toString());
+         for(int i = removed +1; i < counter ; i++)
+            result.append(",").append(itemArray[i].toString());
+         result.append("]");
+         return result.toString();
+      }
+   }
+   /////////////////////////// END OF NODE /////////////////////////////////////
+
+
+
+   /////////////////////////// DOUBLING TEST //////////////////////////////////
    private static class Stopwatch {
       private final long start;
 
@@ -203,7 +247,7 @@ public class ULLQueue<Item> implements  IQueue<Item> {
       private static double enqueueTimeTrial(ULLQueue<Double> queue) {
 
          Stopwatch timer = new Stopwatch();
-       for(int i = 0 ; i < 100000 ; i++)
+       for(int i = 0 ; i < 200000 ; i++)
          queue.enqueue(0.0);
          return timer.elapsedTime();
       }
@@ -226,7 +270,7 @@ public class ULLQueue<Item> implements  IQueue<Item> {
             if(i % 10 == 0) System.gc();
             double prev = enqueueTimeTrial(halfQueue);
             double current = enqueueTimeTrial(fullQueue);
-            for(int j = 0; j < 100000 ; j++) {
+            for(int j = 0; j < 200000 ; j++) {
                halfQueue.dequeue();
                fullQueue.dequeue();
             }
@@ -285,4 +329,5 @@ public class ULLQueue<Item> implements  IQueue<Item> {
 
       return array;
    }
+   //////////////////////////// END OF DOUBLING TEST //////////////////////////////////////////////
 }

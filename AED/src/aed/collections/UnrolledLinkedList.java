@@ -1,16 +1,11 @@
 package aed.collections;
 
-import java.lang.reflect.Array;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.*;
 
 
-@SuppressWarnings("uncheked")
 public class UnrolledLinkedList<Item> implements IList<Item>{
-   private int blockSize = 1024;
+   private int blockSize = 12192;
    private Node head;
    private Node tail;
    private int N;
@@ -21,44 +16,64 @@ public class UnrolledLinkedList<Item> implements IList<Item>{
    // therefore, if you want to use current it is recommended to start the variable to head .
 
    public static void main(String[] args){
-      var list = new UnrolledLinkedList<Integer>(5);
+      var list = new UnrolledLinkedList<Integer>(4);
       for(int i = 0; i < 100 ; i++)
          list.add(i);
+
+      var list2 = list.shallowCopy();
 
       for(Integer a: list){
          System.out.print(a + " ");
       }
       System.out.println();
 
-      list.addAt(35,400);
+      list.addAt(34,1);
+      list.addAt(34,2);
+      list.addAt(36,3);
+      list.addAt(36,4);
+      System.out.println("list N - "+  list.N);
+      list.remove(100);
+      list.remove(100);
+      //list.remove(37);
+
+
+
       list.set(99,55555);
 
-      var list2 = list.shallowCopy();
+      list.remove();
+      list.remove();
+      list.remove();
+      list.remove();
 
       for(Integer a: list2){
          System.out.print(a + " ");
       }
+
+      Object[][] matrix2 = list2.getArrayOfBlocks();
+      Arrays.stream(matrix2).map(Arrays::toString).forEach(System.out::println);
+
       System.out.println();
       Object[][] matrix = list.getArrayOfBlocks();
       Arrays.stream(matrix).map(Arrays::toString).forEach(System.out::println);
 
 
-      //add is O(N) time elapsed wildly between 0.1 and 0.8 , the reason why this happens because add time is highly
-      //dependent on the block size ,so it varies somewhat wildly , even though is slower than get.
-      double efficiency = DoublingRatioTest.add(1000);
+
+
+      //add is O(N) time elapsed is around 2
+      double efficiency = DoublingRatioTest.add(200);
       System.out.println(" Time elapsed = " + efficiency + " and log is : " + (Math.log(efficiency) / Math.log(2)));
 
-      //get is O(N) time elapsed is around 2 and 2.4 , this is more consistent as the time is as dependent on the
-      // blockSize as the add function although the higher the blockSize the faster is get most of the time.
-      double efficiency2 = DoublingRatioTest.get(1000);
+      //get is O(N) time elapsed is around 2
+      double efficiency2 = DoublingRatioTest.get(200);
       System.out.println(" Time elapsed = " + efficiency2 + " and log is : " + (Math.log(efficiency2) / Math.log(2)));
 
 
-      //conclusion the best blockSize that I found is 1024
+      //conclusion the best blockSize that I found is 12024
+
    }
 
-   UnrolledLinkedList(){}
-   UnrolledLinkedList(int blockSize){ this.blockSize = blockSize;}
+   public UnrolledLinkedList(){}
+   public UnrolledLinkedList(int blockSize){ this.blockSize = blockSize;}
 
    public void add(Item item) {
 
@@ -84,7 +99,11 @@ public class UnrolledLinkedList<Item> implements IList<Item>{
 
    public void addAt(int index, Item item) {
       if(index > N)
-         throw new ArrayIndexOutOfBoundsException();
+         return;
+      if(index == N){
+         add(item);
+         return;
+      }
 
       if(head == null)
       {
@@ -94,7 +113,7 @@ public class UnrolledLinkedList<Item> implements IList<Item>{
       }
       else
       {
-         int  currentIndex = findIndexNode(index,head);
+         int  currentIndex = findIndexNode(index ,head);
 
          //node is full it's splits the node in two each with one half , and adds to the one with the appropriate index
          if(current.itemArray.length == current.counter) {
@@ -102,19 +121,10 @@ public class UnrolledLinkedList<Item> implements IList<Item>{
             if(current == tail)
                tail = current.next;
 
-            //if index is in the first node
-            if(current.counter < currentIndex) {
-               current.addAt(currentIndex, item);
-
-            }
-            //if index is in the second node
-            else{
-               current = current.next;
-               current.addAt(currentIndex, item);
-            }
+            //discovers on which nodes the currentIndex is .
+            currentIndex = findIndexNode(currentIndex, current);
          }
-         else
-            current.addAt(currentIndex,item);
+         current.addAt(currentIndex, item);
       }
       N++;
    }
@@ -146,7 +156,20 @@ public class UnrolledLinkedList<Item> implements IList<Item>{
       if(N == 0 || index >= N)
          return null;
 
-      int currentIndex = findIndexNode(index,head);
+
+
+      Node beforeCurrent = head;
+      int currentIndex = index -1;
+      //weird code following
+      // searches for the node before current , currentIndex is higher than the index or equal , the result
+      // will land on the node before the current
+      if(index >= head.counter) {
+         currentIndex =findIndexNode(currentIndex, head);
+         beforeCurrent = current;
+      }
+
+
+       currentIndex = findIndexNode(currentIndex +1,beforeCurrent);
 
       Item item = current.removeAt(currentIndex);
       //if block is empty delete node
@@ -156,15 +179,9 @@ public class UnrolledLinkedList<Item> implements IList<Item>{
             head = head.next;
          else
          {
-            Node NextCurrent = current;
-            // searches for the node before current , currentIndex is higher than the index or equal , the result
-            // will land on the node before the current
-            // the result can be discarded , we are only interested on the side effect of placing the node.
-            findIndexNode(index -currentIndex -1,head);
-
-            current.next = NextCurrent.next;
-            if(NextCurrent.next == null)
-               tail = current;
+            beforeCurrent.next = current.next;
+            if(beforeCurrent.next == null)
+               tail = beforeCurrent;
          }
       }
 
@@ -198,13 +215,20 @@ public class UnrolledLinkedList<Item> implements IList<Item>{
       current.itemArray[currentIndex] = element;
    }
 
-   public IList<Item> shallowCopy() {
+   public UnrolledLinkedList<Item> shallowCopy() {
       var list = new UnrolledLinkedList<Item>(blockSize);
-      list.head = head;
-      list.tail = tail;
+      if(N != 0){
+      list.head = head.shallowCopy();
       list.N = N;
-      list.blockSize = blockSize;
-
+         Node current = head;
+         Node altCurrent = list.head;
+         while(current.next != null) {
+            altCurrent.next = current.next.shallowCopy();
+            altCurrent = altCurrent.next;
+            current = current.next;
+         }
+         list.tail = altCurrent.next;
+      }
       return list;
    }
 /////////////////////////////////////////////////////////////////////////////////
@@ -217,7 +241,7 @@ public class UnrolledLinkedList<Item> implements IList<Item>{
       int globalIndex = 0;
 
       public boolean hasNext(){
-         return current != null;
+         return current != null ;
       }
 
       public Item next(){
@@ -233,7 +257,6 @@ public class UnrolledLinkedList<Item> implements IList<Item>{
          return item;
       }
 
-      public void delete(){}
    }
 
    public Item[][] getArrayOfBlocks(){
@@ -244,6 +267,7 @@ public class UnrolledLinkedList<Item> implements IList<Item>{
          i++;
       }
 
+      @SuppressWarnings("unchecked")
       Item[][] matrix = (Item[][]) new Object[i][blockSize];
 
       current = head;
@@ -265,7 +289,7 @@ public class UnrolledLinkedList<Item> implements IList<Item>{
       current = start;
 
       //finds the node were the index is to be removed or inserted;
-      while(currentIndex >= current.counter && current.next != null) {
+      while(currentIndex >= current.counter) {
          currentIndex -= current.counter;
          current = current.next;
       }
@@ -303,46 +327,60 @@ public class UnrolledLinkedList<Item> implements IList<Item>{
        int counter;
        Node next;
 
-      Node(){itemArray = (Item[]) new Object[blockSize]; }
-      Node(Node next){itemArray = (Item[]) new Object[blockSize]; this.next = next;}
+      @SuppressWarnings("unchecked")
+      public Node(){itemArray = (Item[]) new Object[blockSize]; }
 
       //adds an item to the array
-      void add(Item item){
+      public void add(Item item){
          itemArray[counter] = item;
          counter++;
       }
 
-      void addAt(int index,Item item){
+      public void addAt(int index,Item item){
          itemArray[counter] = item;
-         for(int i = counter ; i > index ; i-- ){
-            swap(itemArray,i,i-1);
-         }
-         counter++;
-      }
+         if(counter - index >= 0) System.arraycopy(itemArray, index, itemArray, index + 1, counter - index);
+         itemArray[index] = item;
 
-      private void swap(Item[] array,int x,int y){
-         Item temp = array[x];
-         array[x] = array[y];
-         array[y] = temp;
+         counter++;
       }
 
       //removes an item from the array
-      Item remove(){
+      public Item remove(){
          counter--;
          Item item = itemArray[counter];
          itemArray[counter] = null; //avoid loitering
          return item;
       }
 
-      Item removeAt(int index){
-         counter--;
+      public Item removeAt(int index){
          Item item = itemArray[index];
 
-         for(int i = index +1 ; i <= counter ; i++){
-            swap(itemArray,i,i-1);
-         }
-         itemArray[counter] = null; //avoid loitering
+         if(counter - (index + 1) >= 0)
+            System.arraycopy(itemArray, index + 1, itemArray, index + 1 - 1, counter - (index + 1));
+         itemArray[counter -1] = null; //avoid duplication of the last element
+
+         counter--;
          return item;
+      }
+
+
+      //there is no need to copy next as it will be modified later .
+      public Node shallowCopy(){
+         Node result = new Node();
+         if(counter >= 0) System.arraycopy(itemArray, 0, result.itemArray, 0, counter);
+         result.counter = counter;
+         return result;
+      }
+
+      public String toString(){
+         StringBuilder result = new StringBuilder("[");
+
+         if(counter > 0)
+            result.append(itemArray[0].toString());
+         for(int i = 1; i < counter ; i++)
+            result.append(",").append(itemArray[i].toString());
+         result.append("]");
+         return result.toString();
       }
    }
 
@@ -362,6 +400,7 @@ public class UnrolledLinkedList<Item> implements IList<Item>{
       private static double addTimeTrial(int N , UnrolledLinkedList<Double> list){
 
          Stopwatch timer = new Stopwatch();
+         for(int i = 0; i < 200 ; i++)
          list.addAt(N,0.0);
          return timer.elapsedTime();
       }
@@ -374,22 +413,27 @@ public class UnrolledLinkedList<Item> implements IList<Item>{
          for(Double a : array)
             list.add(a);
 
+         double analysis = 0;
          double total = 0;
          for(int i = 0; i < N; i++) {
-            double prev = addTimeTrial(10000000, list);
-            double current = addTimeTrial(20000000, list);
+            int random = (int) (10000000.0 + 10000000.0 * Math.random());
+            double prev = addTimeTrial(random/2, list);
+            double current = addTimeTrial(random, list);
+            analysis += prev;
             double ratio = current / prev;
             total += ratio;
-//            System.out.printf("previous = %.5f , next = %.5f , ratio = %.5f , O(N) = %.5f\n",
-//                    prev,current,ratio,Math.log(ratio)/Math.log(2));
+            //System.out.printf("previous = %.5f , next = %.5f , ratio = %.5f , O(N) = %.5f\n",
+            //        prev,current,ratio,Math.log(ratio)/Math.log(2));
          }
+         System.out.println(analysis);
          return total / ((double)N);
       }
 
       private static double getTimeTrial(int N , UnrolledLinkedList<Double> list){
 
          Stopwatch timer = new Stopwatch();
-         list.get(N);
+         for(long i = 0; i < 20000000; i++)
+            list.get(N);
          return timer.elapsedTime();
       }
 
@@ -397,19 +441,20 @@ public class UnrolledLinkedList<Item> implements IList<Item>{
          int size = 20000002;
          var array = randomDoubleArray(size);
          var list = new UnrolledLinkedList<Double>();
-
-         for(Double a : array)
-            list.add(a);
+         double analysis = 0;
 
          double total = 0;
          for(int i = 0; i < N; i++) {
-            double prev = getTimeTrial(10000000, list);
-            double current = getTimeTrial(20000000, list);
+            int random = (int) (10000000.0 + 10000000.0 * Math.random());
+            double prev = getTimeTrial(random/2, list);
+            double current = getTimeTrial(random, list);
+            analysis += current;
             double ratio = current / prev;
             total += ratio;
-//            System.out.printf("previous = %.5f , next = %.5f , ratio = %.5f , O(N) = %.5f\n",
-//                    prev,current,ratio,Math.log(ratio)/Math.log(2));
+  //          System.out.printf("previous = %.5f , next = %.5f , ratio = %.5f , O(N) = %.5f\n",
+  //                  prev,current,ratio,Math.log(ratio)/Math.log(2));
          }
+         System.out.println(analysis);
          return total / ((double)N);
       }
 
