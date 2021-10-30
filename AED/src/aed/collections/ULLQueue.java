@@ -5,14 +5,16 @@ import java.util.*;
 public class ULLQueue<Item> implements  IQueue<Item> {
    private Node head;
    private Node tail;
-   private int blockSize = 1024;
+   private int blockSize = 12024;
    private int N;
+   private int removed;  //index for the elements that have been removed from the queue
 
    public static void main(String[] args) {
       var queue = new ULLQueue<Integer>(4);
 
       for(int i = 0; i < 10 ; i++)
          queue.enqueue(i);
+
 
       var queue2 = new ULLQueue<Boolean>(1);
 
@@ -36,7 +38,7 @@ public class ULLQueue<Item> implements  IQueue<Item> {
 
       System.out.println(queue2.toString());
 
-/*
+
       //O(1)
       double efficiency = DoublingRatioTest.enqueue(100);
       System.out.println(" Time elapsed = " + efficiency + " and log is : " + (Math.log(efficiency) / Math.log(2)));
@@ -44,7 +46,7 @@ public class ULLQueue<Item> implements  IQueue<Item> {
       //O(1)
       double efficiency2 = DoublingRatioTest.dequeue(100);
       System.out.println(" Time elapsed = " + efficiency2 + " and log is : " + (Math.log(efficiency2) / Math.log(2)));
-*/
+
 
    }
 
@@ -82,15 +84,16 @@ public class ULLQueue<Item> implements  IQueue<Item> {
          if(head == tail)
             tail = null;
          head = head.next;
+         removed = 0;
       }
       N--;
       return item;
    }
 
    public Item peek() {
-      if(tail == null)
+      if(head == null)
          return null;
-      return tail.itemArray[tail.counter -1];
+      return head.itemArray[removed];
    }
 
    public boolean isEmpty() {
@@ -104,12 +107,12 @@ public class ULLQueue<Item> implements  IQueue<Item> {
    public ULLQueue<Item> shallowCopy() {
       var queue = new ULLQueue<Item>(blockSize);
       if(N != 0){
-         queue.head = head.shallowCopy();
+         queue.head = head.shallowCopy(removed);
          queue.N = N;
          Node current = head;
          Node altCurrent = queue.head;
          while(current.next != null) {
-            altCurrent.next = current.next.shallowCopy();
+            altCurrent.next = current.next.shallowCopy(0);
             altCurrent = altCurrent.next;
             current = current.next;
          }
@@ -141,7 +144,7 @@ public class ULLQueue<Item> implements  IQueue<Item> {
       private Node current = head;
       private int globalIndex = 0;
 
-      public ULLQueueIterator(){if(head != null) globalIndex = head.removed;}
+      public ULLQueueIterator(){if(head != null) globalIndex = removed;}
 
       public boolean hasNext() {
          return current != null;
@@ -166,9 +169,8 @@ public class ULLQueue<Item> implements  IQueue<Item> {
    //////////////////////// NODE ////////////////////////////////////////////////////////
 
    private class Node {
-      private Item[] itemArray;
+      private final Item[] itemArray;
       private int counter;
-      private int removed; //index for the elements that have been removed from the queue
       private Node next;
 
       @SuppressWarnings("unchecked")
@@ -184,7 +186,7 @@ public class ULLQueue<Item> implements  IQueue<Item> {
 
       public Item remove() {
          Item item = itemArray[removed];
-         itemArray[removed] = null;
+         itemArray[removed] = null; // avoid loitering
          removed++;
          return item;
       }
@@ -198,26 +200,26 @@ public class ULLQueue<Item> implements  IQueue<Item> {
       }
 
       public boolean isEmpty() {
-         return counter == 0 || removed == counter;
+         return counter == 0 || itemArray[counter -1] == null;
       }
 
       //there is no need to copy next as it will be modified later .
-      public Node shallowCopy(){
+      public Node shallowCopy(int start){
          Node result = new Node();
          result.counter = counter;
-         result.removed = removed;
-         for(int i = removed ; i < counter ; i++){
-            result.itemArray[i] = itemArray[i];
-         }
+         System.arraycopy(itemArray, start, result.itemArray, start, counter - start);
          return result;
       }
 
       public String toString(){
          StringBuilder result = new StringBuilder("[");
 
-         if(counter > 0)
-            result.append(itemArray[removed].toString());
-         for(int i = removed +1; i < counter ; i++)
+         int start = 0;
+         if(this.itemArray == head.itemArray)
+            start = removed;
+
+         result.append(itemArray[start].toString());
+         for(int i = start +1; i < counter ; i++)
             result.append(",").append(itemArray[i].toString());
          result.append("]");
          return result.toString();
