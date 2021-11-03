@@ -5,7 +5,7 @@ import java.util.*;
 public class ULLQueue<Item> implements  IQueue<Item> {
    private Node head;
    private Node tail;
-   private int blockSize = 12024;
+   private int blockSize = 1024;
    private int N;
    private int removed;  //index for the elements that have been removed from the queue
 
@@ -104,7 +104,7 @@ public class ULLQueue<Item> implements  IQueue<Item> {
       return N;
    }
 
-   public ULLQueue<Item> shallowCopy() {
+   public IQueue<Item> shallowCopy() {
       var queue = new ULLQueue<Item>(blockSize);
       if(N != 0){
          queue.head = head.shallowCopy(removed);
@@ -177,7 +177,6 @@ public class ULLQueue<Item> implements  IQueue<Item> {
       public Node() {
          itemArray = (Item[]) new Object[blockSize];
       }
-
 
       public void add(Item item) {
          itemArray[counter] = item;

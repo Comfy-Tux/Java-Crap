@@ -1,7 +1,6 @@
 package aed.collections;
 
 import java.util.*;
-import java.util.stream.*;
 
 
 public class UnrolledLinkedList<Item> implements IList<Item>{
@@ -38,11 +37,13 @@ public class UnrolledLinkedList<Item> implements IList<Item>{
       list.set(99,55555);
 
 
-      for(Integer a: list2){
+      for(Object a: list2){
          System.out.print(a + " ");
       }
 
-      Object[][] matrix2 = list2.getArrayOfBlocks();
+      UnrolledLinkedList list3 = (UnrolledLinkedList) list2;
+
+      Object[][] matrix2 = list3.getArrayOfBlocks();
       Arrays.stream(matrix2).map(Arrays::toString).forEach(System.out::println);
 
       System.out.println();
@@ -60,7 +61,7 @@ public class UnrolledLinkedList<Item> implements IList<Item>{
       double efficiency = DoublingRatioTest.add(200);
       System.out.println(" Time elapsed = " + efficiency + " and log is : " + (Math.log(efficiency) / Math.log(2)));
 
-      //get is O(log(N)) time elapsed is around 2
+      //get is O(N)/blocksize time elapsed is around 2 if blocksize is too big , O(N) is approximately O(1);
       double efficiency2 = DoublingRatioTest.get(200);
       System.out.println(" Time elapsed = " + efficiency2 + " and log is : " + (Math.log(efficiency2) / Math.log(2)));
 
@@ -86,7 +87,7 @@ public class UnrolledLinkedList<Item> implements IList<Item>{
       else
       {
 
-         //last node is full , it splits the node in two nodes is half full , and adds the item to the last
+         //last node is full , it splits the node in two nodes with each half full , and adds the item to the last
          if(tail.counter == tail.itemArray.length) {
             fullNode(tail);
             tail = tail.next;
@@ -120,7 +121,7 @@ public class UnrolledLinkedList<Item> implements IList<Item>{
             if(current == tail)
                tail = current.next;
 
-            //discovers on which nodes the currentIndex is .
+            //discovers on which of the nodes the currentIndex is .
             currentIndex = findIndexNode(currentIndex, current);
          }
          current.addAt(currentIndex, item);
@@ -210,7 +211,7 @@ public class UnrolledLinkedList<Item> implements IList<Item>{
       current.itemArray[currentIndex] = element;
    }
 
-   public UnrolledLinkedList<Item> shallowCopy() {
+   public IList<Item> shallowCopy() {
       var list = new UnrolledLinkedList<Item>(blockSize);
       if(N != 0){
       list.head = head.shallowCopy();
