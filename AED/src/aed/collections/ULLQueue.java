@@ -5,7 +5,7 @@ import java.util.*;
 public class ULLQueue<Item> implements  IQueue<Item> {
    private Node head;
    private Node tail;
-   private int blockSize = 1024;
+   private int blockSize = 2648;
    private int N;
    private int removed;  //index for the elements that have been removed from the queue
 
@@ -199,7 +199,7 @@ public class ULLQueue<Item> implements  IQueue<Item> {
       }
 
       public boolean isEmpty() {
-         return counter == 0 || itemArray[counter -1] == null;
+         return itemArray[counter -1] == null;
       }
 
       //there is no need to copy next as it will be modified later .
