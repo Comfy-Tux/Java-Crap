@@ -24,6 +24,10 @@ public class CompareSorts {
             QuickMergeSort.sort(array);
          else if(name.equals("NaturalMergeSort"))
             NaturalMergeSort.sort(array);
+         else if(name.equals("QuickSort"))
+            QuickSort.sort(array);
+         else if(name.equals("QuickSort3way"))
+            QuickSort3way.sort(array);
          else
             return 0.0;
          total += timer.elapsedTime();
@@ -49,6 +53,8 @@ public class CompareSorts {
                case 4: sort1 = "ShellSort";sort2 = "InsertionSort"; length = 1000;break;
                case 5: sort1 = "QuickMergeSort";sort2 = "MergeSort"; length = 10000;break;
                case 6: sort1 = "BottomUpMergeSort";sort2 = "NaturalMergeSort";length = 10000;break;
+               case 7: sort1 = "QuickSort";sort2 = "MergeSort";length = 10000;break;
+               case 8: sort1 = "QuickSort";sort2 = "QuickSort3way";length = 10000;break;
             }
          }
          else {

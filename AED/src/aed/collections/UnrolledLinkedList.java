@@ -4,7 +4,7 @@ import java.util.*;
 
 
 public class UnrolledLinkedList<Item> implements IList<Item>{
-   private int blockSize = 60192;
+   private int blockSize = 62548;
    private Node head;
    private Node tail;
    private int N;
