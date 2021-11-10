@@ -21,7 +21,7 @@ public class ListingFiles {
 
    public static void main(String[] args){
       //var treeDirectory = new ListingFiles("/home/comfypad/Java_Programming/Java-Crap");
-      var file = new ListingFiles("/home/comfypad/Java_Programming/Java-Crap");
+      var file = new ListingFiles("/home/comfypad/Java-Crap");
       file.printFiles();
    }
 

@@ -50,8 +50,7 @@ public class ULLQueue<Item> implements  IQueue<Item> {
 
    }
 
-   public ULLQueue() {
-   }
+   public ULLQueue() {}
 
    public ULLQueue(int blockSize) {
       this.blockSize = blockSize;
@@ -224,7 +223,7 @@ public class ULLQueue<Item> implements  IQueue<Item> {
          return result.toString();
       }
    }
-   /////////////////////////// END OF NODE /////////////////////////////////////
+   /////////////////////////// END OF NODE //////////////////////////////////////
 
 
 

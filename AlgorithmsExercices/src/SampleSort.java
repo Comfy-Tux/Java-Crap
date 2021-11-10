@@ -1,24 +1,29 @@
-import java.util.Arrays;
-import java.util.Random;
-import java.util.stream.Stream;
+//it's basically a generalization of QuickSort , the size of the sample defines the amount of elements
+// to choose the medium from
 
-public class QuickSort {
+//BTW AFTER REVISING THE CODE I DON'T THINK THIS SAMPLESORT MEETS THE REQUIREMENTS , THERE'S A PART MISSING ,
+//THIS CODE IS FROM GITHUB ALGORITHMS SEDGEWICK SOLUTIONS ,BUT I SUSPECT IT IS WRONG.
+
+import java.util.*;
+import java.util.stream.*;
+
+public class SampleSort {
 
    public static void main(String[] args){
       int M = 10;
       var array = new Integer[M];
-      
+
       for(int i = 0; i < M; i++)
          array[i] = i;
-      
+
       shuffle(array);
       System.out.println(Arrays.toString(array));
 
       sort(array);
       System.out.println(Arrays.toString(array));
-      
-      
-      
+
+
+
       int N = 100;
       var randomArray = new Double[N];
       for(int i = 0; i < N; i++){
@@ -37,38 +42,34 @@ public class QuickSort {
 
    public static void sort(Comparable[] a){
       shuffle(a);
-      sort(0,a.length-1,a);
+      sort(0,a.length-1,a,(int)Math.pow(2.0,2.0) -1);
    }
 
 
-   private static void sort(int lo,int hi,Comparable[] a){
+   private static void sort(int lo,int hi,Comparable[] a,int sampleSize){
       if(lo >= hi)
          return;
 
-      int pivot = partitioning(lo,hi,a);
-      sort(lo,pivot,a);
-      sort(pivot+1,hi,a);
+      int pivot = partitioning(lo,hi,a,sampleSize);
+      sort(lo,pivot,a,sampleSize);
+      sort(pivot+1,hi,a,sampleSize);
    }
 
    //median of 3
-   private static int partitioning(int lo,int hi,Comparable[] a){
+   private static int partitioning(int lo,int hi,Comparable[] a,int sampleSize){
       int i = lo;
       int j = hi +1;
-/*      int mid = (hi -lo)/2 + lo;
 
-      //order lo , mid , hi on the array
-      if(less(a[hi],a[lo]))
-         swap(a,hi,lo);
-      if(less(a[mid],a[lo]))
-         swap(a,mid,lo);
-      if(less(a[hi],a[mid]))
-         swap(a,mid,hi);
+      if(sampleSize <= hi - lo +1){
+         InsertionSort.sort(a,lo,lo + sampleSize -1);
+         int mid = lo + sampleSize/2;
+         swap(a,lo,mid);
+      }
 
-      swap(a,mid,lo);*/
       Comparable key = a[lo];
       while(true){
          while(less(a[++i],key)) if(i == hi) break;
-         while(less(key,a[--j])) ;
+         while(less(key,a[--j])) if(j == lo) break;
          if(i >= j)
             break;
          swap(a,i,j);
@@ -103,4 +104,23 @@ public class QuickSort {
       }
    }
 
+   private static class InsertionSort {
+      private static boolean less(Comparable x, Comparable y) {
+         return x.compareTo(y) < 0;
+      }
+
+      private static void exch(Comparable[] a, int x, int y) {
+         Comparable temp = a[x];
+         a[x] = a[y];
+         a[y] = temp;
+      }
+
+      public static void sort(Comparable[] a , int start , int end) {
+         int N = end;
+         for(int i = start + 1; i <= N; i++) {
+            for(int j = i; j > start && less(a[j], a[j - 1]); j--)
+               exch(a, j, j - 1);
+         }
+      }
+   }
 }

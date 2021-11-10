@@ -28,6 +28,14 @@ public class CompareSorts {
             QuickSort.sort(array);
          else if(name.equals("QuickSort3way"))
             QuickSort3way.sort(array);
+         else if(name.equals("NonRecursiveQuickSort"))
+            NonRecursiveQuickSort.sort(array);
+         else if(name.equals("FastQuickSort3way"))
+            FastQuickSort3way.sort(array);
+         else if(name.equals("SampleSort"))
+            SampleSort.sort(array);
+         else if(name.equals("BubbleSort"))
+            BubbleSort.sort(array);
          else
             return 0.0;
          total += timer.elapsedTime();
@@ -55,6 +63,11 @@ public class CompareSorts {
                case 6: sort1 = "BottomUpMergeSort";sort2 = "NaturalMergeSort";length = 10000;break;
                case 7: sort1 = "QuickSort";sort2 = "MergeSort";length = 10000;break;
                case 8: sort1 = "QuickSort";sort2 = "QuickSort3way";length = 10000;break;
+               case 9: sort1 = "QuickSort";sort2 = "NonRecursiveQuickSort";length = 10000;break;
+               case 10:sort1 = "FastQuickSort3way";sort2 = "QuickSort3way";length = 10000;break;
+               case 11:sort1 = "QuickMergeSort";sort2 = "FastQuickSort3way";length = 10000;break;
+               case 12:sort1 = "QuickSort";sort2 = "SampleSort"; length = 10000; break;
+               case 13:sort1 = "QuickSort";sort2 = "BubbleSort"; length = 1000; break;
             }
          }
          else {
