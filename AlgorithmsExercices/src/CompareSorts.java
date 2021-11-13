@@ -46,7 +46,7 @@ public class CompareSorts {
 
    public static void main(String[] args){
       var in = new Scanner(System.in);
-      int precision = 100;
+      int precision = 50;
       System.out.println("Insert in format : sort sort N");
       String sort1 = null;
       String sort2 = null;
@@ -68,6 +68,7 @@ public class CompareSorts {
                case 11:sort1 = "QuickMergeSort";sort2 = "FastQuickSort3way";length = 10000;break;
                case 12:sort1 = "QuickSort";sort2 = "SampleSort"; length = 10000; break;
                case 13:sort1 = "QuickSort";sort2 = "BubbleSort"; length = 1000; break;
+               case 14:sort1 = "QuickSort";sort2 = "ShellSort";length = 100000;break;
             }
          }
          else {
