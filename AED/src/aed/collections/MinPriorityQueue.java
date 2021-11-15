@@ -282,10 +282,6 @@ public class MinPriorityQueue<T extends Comparable<T>> {
 
                 halfTime += timeTrialInsert(halfQueue, M / 2, nTrials);
                 currentTime += timeTrialInsert(queue, M, nTrials);
-/*                for(int j = 0; j < nTrials; j++) {
-                    queue.removeMin();
-                    halfQueue.removeMin();
-                }*/
             }
             return new TimeAndRatio(halfTime + currentTime, currentTime / halfTime);
         }
@@ -306,10 +302,6 @@ public class MinPriorityQueue<T extends Comparable<T>> {
 
                 halfTime += timeTrialRemoveMin(halfQueue, M / 2, nTrials);
                 currentTime += timeTrialRemoveMin(queue, M, nTrials);
-/*                for(int j = M - 1; j >= M - 1 - nTrials; j--)
-                    queue.insert(j);
-                for(int j = M / 2 - 1; j >= M / 2 - 1 - nTrials; j--)
-                    queue.insert(j);*/
             }
             return new TimeAndRatio(halfTime + currentTime, currentTime / halfTime);
         }
@@ -324,15 +316,15 @@ public class MinPriorityQueue<T extends Comparable<T>> {
         }
     }
 
-    private static String bigO(double ratio) {
+    private static String bigO(double ratio){
         int n = (int) Math.round(ratio);
-        return switch(n) {
-            case 0 -> "1";
-            case 1 -> "N";
-            case 2 -> "N^2";
-            case 3 -> "N^3";
-            default -> "1";
-        };
+        switch(n) {
+            case 0 : return "1";
+            case 1 : return "N";
+            case 2 : return "N^2";
+            case 3 : return "N^3";
+            default : return "1";
+        }
     }
 
     private static double bigOExponent(double time) {

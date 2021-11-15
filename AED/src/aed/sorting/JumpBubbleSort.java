@@ -164,13 +164,13 @@ public class JumpBubbleSort extends Sort {
 
     private static String bigO(double ratio){
         int n = (int) Math.round(ratio);
-        return switch(n) {
-            case 0 -> "1";
-            case 1 -> "N";
-            case 2 -> "N^2";
-            case 3 -> "N^3";
-            default -> "N^infinite";
-        };
+        switch(n) {
+            case 0 : return "1";
+            case 1 : return "N";
+            case 2 : return "N^2";
+            case 3 : return "N^3";
+            default : return "1";
+        }
     }
 
     private static double bigOExponent(double time){

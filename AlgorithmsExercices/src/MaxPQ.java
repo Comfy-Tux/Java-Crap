@@ -19,6 +19,8 @@ public class MaxPQ<Key extends Comparable<Key>> extends Sort{
    public void insert(Key v){
       pq[++N] = v;
       swim(N);
+      if(N == pq.length -1)
+         resize(pq.length *2);
    }
 
    public Key delMax(){
@@ -26,6 +28,8 @@ public class MaxPQ<Key extends Comparable<Key>> extends Sort{
       exchange(pq,1,N--);  //exchange with last item.
       pq[N+1] = null;      //avoid loitering.
       sink(1);             //restore heap property.
+      if(pq.length > 10 && N/4 < pq.length)
+         resize(pq.length/2);
       return max;
    }
 
@@ -47,6 +51,8 @@ public class MaxPQ<Key extends Comparable<Key>> extends Sort{
    }
 
    private void resize(int n){
+      `
+
 
    }
 
