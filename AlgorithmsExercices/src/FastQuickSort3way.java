@@ -184,7 +184,7 @@ public class FastQuickSort3way {
       return less(array[index1], array[index2]) ?
               (less(array[index2], array[index3]) ? index2 :
                       less(array[index1], array[index3])
-                      ? index3 : index1) :
+                      ? array[index3] : array[index1]) :
               (less(index1, index3) ? index1 :
                       less(index2, index3) ? index3 : index2);
    }

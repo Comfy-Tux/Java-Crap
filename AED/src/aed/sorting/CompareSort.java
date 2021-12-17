@@ -16,6 +16,8 @@ public class CompareSort {
             JumpBubbleSort.sort(array);
          else if(name.equals("QuickSort3Way"))
             QuickSort3Way.sort(array);
+         else if(name.equals("QuickMergeSort"))
+            QuickMergeSort.sort(array);
          else
             return 0.0;
          total += timer.elapsedTime();
@@ -30,12 +32,13 @@ public class CompareSort {
       System.out.println("Insert in format : sort sort N");
       String sort1 = null;
       String sort2 = null;
-      int length = 10000;
+      int length = 100000;
 
       while(in.hasNext()){
          if(in.hasNextInt()){
             switch(in.nextInt()) {
                case 1: sort1 = "QuickSort3Way";sort2 = "JumpBubbleSort";length = 100000;break;
+               case 2: sort1 = "QuickMergeSort";sort2 = "QuickMergeSort"; length = 100000;break;
             }
          }
          else {

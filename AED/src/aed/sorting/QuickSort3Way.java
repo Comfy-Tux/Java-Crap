@@ -17,7 +17,7 @@ public class QuickSort3Way extends Sort {
         shuffle(a);
         System.out.println("Unordered array");
         System.out.println(Arrays.toString(a));
-        secureSort(a);
+        sort(a);
         System.out.println("Ordered array");
         System.out.println(Arrays.toString(a));
         System.out.println();
@@ -33,6 +33,7 @@ public class QuickSort3Way extends Sort {
         //attention these might be O(log(N)N) , but doubling ratio is not really appropriate for such order of growth ,
         //and the difference between O(N) and O(log(N)N) is not that great so, we will be using O(N) to represent both.
 
+
         //around O(N)
         var orderedTime = DoublingRatio.doublingRatio(nTRIALS,LENGTH,QuickSort3Way::orderedArray);
         System.out.println("An ordered array is O(" + bigO(orderedTime.ratio)  +") worst case , real ratio = " + orderedTime.ratio +
@@ -42,6 +43,7 @@ public class QuickSort3Way extends Sort {
         var invertedTime = DoublingRatio.doublingRatio(nTRIALS,LENGTH,QuickSort3Way::invertedArray);
         System.out.println("An inverted array is O(" + bigO(invertedTime.ratio)  +") worst case , real ratio = " + invertedTime.ratio +
                 " and it took " + invertedTime.time + " seconds");
+
 
         //around O(N)
         var partialTime = DoublingRatio.doublingRatio(nTRIALS,LENGTH,QuickSort3Way::partialArray);
@@ -74,27 +76,16 @@ public class QuickSort3Way extends Sort {
 
     public static <T extends Comparable<T>> void sort(T[] a)
     {
-        shuffle(a);
         sort(a,0,a.length -1);
     }
 
     private static <T extends Comparable<T>> void sort(T[]a ,int lo,int hi){
-        if(hi - lo < 15) {
-            InsertionSort.sort(a,lo,hi);
-            return;
-        }
+          if(hi - lo  < 5){
+              InsertionSort.sort(a,lo,hi);
+              return;
+          }
 
-        int mid = (hi -lo)/2 + lo;
-
-      //order lo , mid , hi on the array
-      if(less(a[hi],a[lo]))
-         exchange(a,hi,lo);
-      if(less(a[mid],a[lo]))
-         exchange(a,mid,lo);
-      if(less(a[hi],a[mid]))
-         exchange(a,mid,hi);
-
-      exchange(a,mid,lo);
+        exchange(a,lo,getPivot(a,lo,hi));
 
         int lt = lo , i = lo+1 , gt = hi;
         T key = a[lo];
@@ -104,16 +95,47 @@ public class QuickSort3Way extends Sort {
             else if(cmp > 0) exchange(a, i, gt--);
             else i++;
         }
+
         sort(a,lo,lt-1);
         sort(a,gt+1,hi);
     }
 
-    public static<T extends Comparable<T>> void shuffle(T[] a){
+    //return the median of 3 elements
+    private static<T extends Comparable<T>> int medianOf3(T[] a,int lo,int mid,int hi){
+        int result = 0;
+        if(less(a[lo],a[mid]))
+            if(less(a[mid],a[hi]))  result = mid;
+            else if(less(a[hi],a[lo]))  result = lo;
+                else result = hi;
+        else
+            if(less(a[lo],a[hi])) result = lo;
+            else if(less(a[mid],a[hi])) result = hi;
+            else result = mid;
+
+
+        return result;
+        //base
+               /* (less(a[lo],a[mid]) ?
+                (less(a[mid],a[hi]) ? mid : (less(a[hi],a[lo]) ? lo : hi))
+                : less(a[lo],a[hi]) ? lo : less(a[mid],a[hi]) ? hi : mid;*/
+    }
+
+    //returns the index of the median of 9
+    private static<T extends Comparable<T>> int getPivot(T[] a,int lo,int hi){
+        int ninth = (hi - lo)/9;
+        int mid  = (hi + lo)/2;
+        int median1 = medianOf3(a,lo,lo+ninth,lo+ninth*2);
+        int median2 = medianOf3(a,mid-ninth,mid,mid+ninth);
+        int median3 = medianOf3(a,hi-ninth*2,hi-ninth,hi);
+        return medianOf3(a,median1,median2,median3);
+    }
+
+    private static<T extends Comparable<T>> void shuffle(T[] a){
         Random r = new Random();
 
-        for(int i = a.length -1 ; i > 0; i--){
-            int j = r.nextInt(i+1);
-            exchange(a,i,j);
+        for(int i = a.length -1 ; i > 0; i--) {
+            int j = r.nextInt(i + 1);
+            exchange(a, i, j);
         }
     }
 
@@ -132,7 +154,6 @@ public class QuickSort3Way extends Sort {
             }
         }
     }
-
 
 
     /////////////////////////////////////// DOUBLING RATIO /////////////////////////////////////////////////
@@ -218,15 +239,6 @@ public class QuickSort3Way extends Sort {
             a[i] = r.nextInt(allowedElements);
         }
         return a;
-    }
-
-    private static void shuffle(Integer[] a){
-        Random r = new Random();
-
-        for(int i = a.length -1 ; i > 0; i--){
-            int j = r.nextInt(i+1);
-            exchange(a,i,j);
-        }
     }
 
     private static String bigO(double ratio){

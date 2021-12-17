@@ -88,7 +88,7 @@ public class UnrolledLinkedList<Item> implements IList<Item>{
       {
 
          //last node is full , it splits the node in two nodes with each half full , and adds the item to the last
-         if(tail.counter == tail.itemArray.length) {
+         if(tail.counter == tail.itemArray.length){
             fullNode(tail);
             tail = tail.next;
          }
