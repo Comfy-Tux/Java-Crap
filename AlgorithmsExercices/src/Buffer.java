@@ -124,6 +124,10 @@ public class Buffer {
          return item;
       }
 
+      public Item peek(){
+         return head.item;
+      }
+
       public boolean isEmpty(){
          return head == null;
       }
