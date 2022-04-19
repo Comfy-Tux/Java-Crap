@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/Algorithms/3WayGrid/3WayGrid.iml" filepath="$PROJECT_DIR$/Algorithms/3WayGrid/3WayGrid.iml" />
+      <module fileurl="file://$PROJECT_DIR$/AED/AED.iml" filepath="$PROJECT_DIR$/AED/AED.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Algorithms/src/Algorithms.iml" filepath="$PROJECT_DIR$/Algorithms/src/Algorithms.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Algorithms/BasicProgrammingModel/BasicProgrammingModel.iml" filepath="$PROJECT_DIR$/Algorithms/BasicProgrammingModel/BasicProgrammingModel.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Algorithms/HelloGoodbye/HelloGoodbye.iml" filepath="$PROJECT_DIR$/Algorithms/HelloGoodbye/HelloGoodbye.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Algorithms/HelloWorld/HelloWorld.iml" filepath="$PROJECT_DIR$/Algorithms/HelloWorld/HelloWorld.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/Java-Crap.iml" filepath="$PROJECT_DIR$/.idea/Java-Crap.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Algorithms/RandomWord/RandomWord.iml" filepath="$PROJECT_DIR$/Algorithms/RandomWord/RandomWord.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Algorithms/week1/week1.iml" filepath="$PROJECT_DIR$/Algorithms/week1/week1.iml" />
+    </modules>
+  </component>
+</project>

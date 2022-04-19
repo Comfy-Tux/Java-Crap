@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="HelloDumbWorld">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/Algorithms/LecturesExercices/HelloDumbWorld.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

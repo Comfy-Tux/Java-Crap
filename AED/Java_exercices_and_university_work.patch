@@ -1,0 +1,1213 @@
+Index: AED/src/aed/collections/ULLQueue.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/AED/src/aed/collections/ULLQueue.java b/AED/src/aed/collections/ULLQueue.java
+new file mode 100644
+--- /dev/null	(revision a298662c6e5371a1430bcb8000430849ef2804c7)
++++ b/AED/src/aed/collections/ULLQueue.java	(revision a298662c6e5371a1430bcb8000430849ef2804c7)
+@@ -0,0 +1,236 @@
++package aed.collections;
++
++import java.util.Iterator;
++
++public class ULLQueue<Item> implements  IQueue<Item> {
++   Node head;
++   Node tail;
++   int blockSize = 16;
++   int N;
++
++   public static void main(String[] args) {
++      var list = new ULLQueue<Integer>(4);
++      for(int i = 0; i < 100; i++)
++         list.enqueue(i);
++      for(Integer a : list) {
++         System.out.print(a + " ");
++      }
++      System.out.println();
++
++
++      System.out.println(list.dequeue());
++      System.out.println(list.dequeue());
++      System.out.println(list.dequeue());
++      System.out.println(list.dequeue());
++      System.out.println(list.dequeue());
++
++      list.enqueue(555);
++      list.enqueue(333);
++
++      for(Integer a : list) {
++         System.out.print(a + " ");
++      }
++      System.out.println();
++      System.out.println(list.peek());
++
++      System.out.println(list.dequeue());
++      System.out.println(list.dequeue());
++      System.out.println(list.dequeue());
++
++      for(Integer a : list) {
++         System.out.print(a + " ");
++      }
++      System.out.println();
++
++      double efficiency = Trial.enqueue(100000,20,1000000,1024);
++      System.out.println(" Time elapsed = " + efficiency + " and log is : " + (Math.log(efficiency) / Math.log(2)));
++   }
++
++   ULLQueue() {
++   }
++
++   ULLQueue(int blockSize) {
++      this.blockSize = blockSize;
++   }
++
++
++   public void enqueue(Item item) {
++      if(tail == null) {
++         tail = new Node();
++         tail.add(item);
++         head = tail;
++      } else {
++         if(tail.isFull()) {
++            Node newTail = new Node();
++            newTail.add(item);
++            tail.next = newTail;
++            tail = newTail;
++         } else
++            tail.add(item);
++      }
++      N++;
++   }
++
++   public Item dequeue() {
++      if(head == null || N == 0)
++         throw new ArrayIndexOutOfBoundsException();
++
++      Item item = head.remove();
++      if(head.isEmpty())
++         head = head.next;
++      N--;
++      return item;
++   }
++
++   public Item peek() {
++      return head.peek();
++   }
++
++   public boolean isEmpty() {
++      return N == 0;
++   }
++
++   public int size() {
++      return N;
++   }
++
++   public IQueue<Item> shallowCopy() {
++      var list = new ULLQueue<Item>(blockSize);
++      list.head = head;
++
++      return list;
++   }
++
++   public Iterator<Item> iterator() {
++      return new ULLQueueIterator();
++   }
++
++   private class ULLQueueIterator implements Iterator<Item> {
++      Node current = head;
++      int globalIndex = current.removed;
++
++      public boolean hasNext() {
++         return current != null;
++      }
++
++      public Item next() {
++         Item item = current.itemArray[globalIndex];
++         globalIndex++;
++         //resets the index to 0 , when it arrives at the end of the current array ,
++         // so the next node array starts from the beginning , and goes to the next node;
++         if(current.counter == globalIndex) {
++            globalIndex = 0;
++            current = current.next;
++         }
++
++         return item;
++      }
++
++      public void delete() {
++      }
++   }
++
++   private class Node {
++      Item[] itemArray;
++      int counter;
++      int removed; //index for the elements that have been removed from the queue
++      Node next;
++
++      @SuppressWarnings("unchecked")
++      Node() {
++         itemArray = (Item[]) new Object[blockSize];
++      }
++
++      @SuppressWarnings("unchecked")
++      Node(Node next) {
++         itemArray = (Item[]) new Object[blockSize];
++         this.next = next;
++      }
++
++      public void add(Item item) {
++         itemArray[counter] = item;
++         counter++;
++      }
++
++      public Item remove() {
++         Item item = itemArray[removed];
++         itemArray[removed] = null;
++         removed++;
++         return item;
++      }
++
++      public Item peek() {
++         return itemArray[removed];
++      }
++
++      boolean isFull() {
++         return counter == itemArray.length;
++      }
++
++      boolean isEmpty() {
++         return counter == 0 || removed == counter;
++      }
++
++   }
++
++   private static class Stopwatch {
++      private final long start;
++
++      public Stopwatch() {
++         start = System.currentTimeMillis();
++      }
++
++      public double elapsedTime() {
++         long now = System.currentTimeMillis();
++         return (now - start) / 1000.0;
++      }
++   }
++
++   private static class Trial {
++      public static double enqueue(int N, int nTimes,int singleTime ,int blockSize) {
++         int i = 0;
++         double result = 0;
++         var queue = new ULLQueue<Double>(blockSize);
++         var array = randomDoubleArray(N);
++         for(int j = 0 ; j < N/2; j++)
++            queue.enqueue(array[j]);
++
++         while(i < nTimes) {
++            int x = (int) (Math.random() * N);
++            int y = x / 2;
++
++            var stopwatch = new Stopwatch();
++            for(int j = 0; j < singleTime; j++)
++               queue.enqueue(0.0);
++            double halfTime = stopwatch.elapsedTime() / singleTime;
++
++            for(int j = N/2 + singleTime; j < N ; j++){
++               queue.enqueue(array[j]);
++            }
++
++            var stopwatch2 = new Stopwatch();
++            for(int j = 0; j < singleTime; j++)
++               queue.enqueue(0.0);
++            double fullTime = stopwatch2.elapsedTime() / singleTime;
++
++            for(int j = 0; j < N/2; j++){
++               queue.dequeue();
++            }
++
++            result += fullTime / halfTime;
++            i++;
++         }
++
++         return result/nTimes;
++      }
++   }
++
++   public static double[] randomDoubleArray(int N){
++      var array = new double[N];
++      for(int i = 0; i < N ; i++)
++         array[i] = Math.random();
++
++      return array;
++   }
++
++}
+Index: AED/src/aed/collections/UnrolledLinkedList.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/AED/src/aed/collections/UnrolledLinkedList.java b/AED/src/aed/collections/UnrolledLinkedList.java
+new file mode 100644
+--- /dev/null	(revision a298662c6e5371a1430bcb8000430849ef2804c7)
++++ b/AED/src/aed/collections/UnrolledLinkedList.java	(revision a298662c6e5371a1430bcb8000430849ef2804c7)
+@@ -0,0 +1,432 @@
++package aed.collections;
++
++import java.lang.reflect.Array;
++import java.util.Arrays;
++import java.util.Iterator;
++import java.util.Random;
++import java.util.stream.*;
++
++public class UnrolledLinkedList<Item> implements IList<Item>{
++   private int blockSize = 16;
++   private Node head;
++   private Node tail;
++   private int N;
++   private Node current; // is just a global variable to store side effects on nodes ;
++   //Attention "current" is to be used as a variable were you have access to the side effect of the method
++   //findIndexNode , the side effect will place the node on the block where the index is present . Due to its high
++   //use I thought that the drawback of a global variable is offset by the benefits of the side effect .
++   // therefore, if you want to use current it is recommended to start the variable to head .
++
++   public static void main(String[] args){
++      var list = new UnrolledLinkedList<Integer>(5);
++      for(int i = 0; i < 100 ; i++)
++         list.add(i);
++      for(Integer a: list){
++         System.out.print(a + " ");
++      }
++      System.out.println();
++
++      list.addAt(35,400);
++      list.set(99,55555);
++
++      var list2 = list.shallowCopy();
++
++      for(Integer a: list2){
++         System.out.print(a + " ");
++      }
++      System.out.println();
++      Object[][] matrix = list.getArrayOfBlocks();
++      Arrays.stream(matrix).map(Arrays::toString).forEach(System.out::println);
++
++      //add is O(N) time elapsed wildly between 0.1 and 0.8 , the reason why this happens because add time is highly
++      //dependent on the block size ,so it varies somewhat wildly , even though is slower than get.
++      double efficiency = Trial.add(100000,20,10000,1024);
++      System.out.println(" Time elapsed = " + efficiency + " and log is : " + (Math.log(efficiency) / Math.log(2)));
++
++      //get is O(N) time elapsed is around 2 and 2.4 , this is more consistent as the time is as dependent on the
++      // blockSize as the add function although the higher the blockSize the faster is get most of the time.
++      double efficiency2 = Trial.get(100000,20,100000,1024);
++      System.out.println(" Time elapsed = " + efficiency2 + " and log is : " + (Math.log(efficiency2) / Math.log(2)));
++
++      //conclusion the best blockSize that I found is 1024
++   }
++
++   UnrolledLinkedList(){}
++   UnrolledLinkedList(int blockSize){ this.blockSize = blockSize;}
++
++   public void add(Item item) {
++
++      if(head == null)
++      {
++         head = new Node();
++         head.add(item);
++         tail = head;
++      }
++      else
++      {
++
++         //last node is full , it splits the node in two nodes is half full , and adds the item to the last
++         if(tail.counter == tail.itemArray.length) {
++            fullNode(tail);
++            tail = tail.next;
++         }
++         tail.add(item);
++      }
++
++      N++;
++   }
++
++   public void addAt(int index, Item item) {
++      if(index > N)
++         throw new ArrayIndexOutOfBoundsException();
++
++      if(head == null)
++      {
++         head = new Node();
++         head.add(item);
++         tail = head;
++      }
++      else
++      {
++         int  currentIndex = findIndexNode(index,head);
++
++         //node is full it's splits the node in two each with one half , and adds to the one with the appropriate index
++         if(current.itemArray.length == current.counter) {
++            fullNode(current);
++            if(current == tail)
++               tail = current.next;
++
++            //if index is in the first node
++            if(current.counter < currentIndex) {
++               current.addAt(currentIndex, item);
++
++            }
++            //if index is in the second node
++            else{
++               current = current.next;
++               current.addAt(currentIndex, item);
++            }
++         }
++         else
++            current.addAt(currentIndex,item);
++      }
++      N++;
++   }
++
++   public Item remove() {
++      if(N == 0)
++         throw new ArrayIndexOutOfBoundsException();
++
++      Item item = tail.remove();
++      //if block is empty delete node
++      if(head.counter  == 0){
++         head = null;
++      }
++      else {
++         if(tail.counter == 0) {
++            current = head;
++            while(current.next != tail) {
++               current = current.next;
++            }
++            tail = current;
++            tail.next = null;
++         }
++      }
++      N--;
++      return item;
++   }
++
++   public Item remove(int index) {
++      if(N == 0 || index >= N)
++         throw new ArrayIndexOutOfBoundsException();
++
++      int currentIndex = findIndexNode(index,head);
++
++      Item item = current.removeAt(currentIndex);
++      //if block is empty delete node
++      if(current.counter == 0){
++         //if the block is the head ,
++         if(current == head)
++            head = head.next;
++         else
++         {
++            Node NextCurrent = current;
++            // searches for the node before current , currentIndex is higher than the index or equal , the result
++            // will land on the node before the current
++            // the result can be discarded , we are only interested on the side effect of placing the node.
++            findIndexNode(index -currentIndex -1,head);
++
++            current.next = NextCurrent.next;
++            if(NextCurrent.next == null)
++               tail = current;
++         }
++      }
++
++      N--;
++      return item;
++   }
++
++   public boolean isEmpty() {
++      return N == 0;
++   }
++
++   public int size() {
++      return N;
++   }
++
++   public Item get(int index) {
++      if(N == 0 || index >= N)
++         throw new ArrayIndexOutOfBoundsException();
++
++      int currentIndex = findIndexNode(index,head);
++
++      return current.itemArray[currentIndex];
++   }
++
++   public void set(int index, Item element) {
++      if(N == 0 || index >= N)
++         throw new ArrayIndexOutOfBoundsException();
++
++      int currentIndex = findIndexNode(index,head);
++
++      current.itemArray[currentIndex] = element;
++   }
++
++   public IList<Item> shallowCopy() {
++      var list = new UnrolledLinkedList<Item>(blockSize);
++      list.head = head;
++
++      return list;
++   }
++/////////////////////////////////////////////////////////////////////////////////
++   public Iterator<Item> iterator() {
++      return new UnrolledLinkedListIterator();
++   }
++
++   private class UnrolledLinkedListIterator implements Iterator<Item>{
++      Node current = head;
++      int globalIndex = 0;
++
++      public boolean hasNext(){
++         return current != null;
++      }
++
++      public Item next(){
++         Item item = current.itemArray[globalIndex];
++         globalIndex++;
++         //resets the index to 0 , when it arrives at the end of the current array ,
++         // so the next node array starts from the beginning , and goes to the next node;
++         if(current.counter == globalIndex) {
++            globalIndex = 0;
++            current = current.next;
++         }
++
++         return item;
++      }
++
++      public void delete(){}
++   }
++
++   public Item[][] getArrayOfBlocks(){
++      int i = 0;
++      current = head;
++      while(current != null) {
++         current = current.next;
++         i++;
++      }
++
++      @SuppressWarnings("uncheked")
++      Item[][] matrix = (Item[][]) new Object[i][blockSize];
++
++      current = head;
++      i = 0;
++      while(current != null) {
++         matrix[i] = current.itemArray;
++         current = current.next;
++         i++;
++      }
++
++      return matrix;
++   }
++
++//////////////////////////////////////////////////////////////////////////////////
++
++   //side effects it alters the current node to the desired position , and returns the current position.
++   private int findIndexNode(int index,Node start){
++      int currentIndex = index;
++      current = start;
++
++      //finds the node were the index is to be removed or inserted;
++      while(currentIndex >= current.counter && current.next != null) {
++         currentIndex -= current.counter;
++         current = current.next;
++      }
++
++      return currentIndex ;
++   }
++
++
++   private void fullNode(Node oldTail){
++      Node tail = new Node();
++      tail.next = oldTail.next;
++      oldTail.next = tail;
++
++      int n = oldTail.itemArray.length /2;
++
++      int i = 0;
++      while( i < n ){
++         tail.add(oldTail.itemArray[n+i]);
++         oldTail.itemArray[n+i] = null;
++         i++;
++      }
++
++      oldTail.counter = n ;
++      tail.counter = n;
++      if(oldTail.itemArray.length % 2 == 1) {
++         tail.itemArray[n] = oldTail.itemArray[oldTail.itemArray.length -1]; // moves the last element to its correspondent position
++         oldTail.itemArray[oldTail.itemArray.length -1] = null; // avoid loitering and duplication
++         tail.counter++;
++      }
++   }
++
++
++   private class Node{
++       Item[] itemArray ;
++       int counter;
++       Node next;
++
++      @SuppressWarnings("uncheked")
++      Node(){itemArray = (Item[]) new Object[blockSize]; }
++      @SuppressWarnings("unckeked")
++      Node(Node next){itemArray = (Item[]) new Object[blockSize]; this.next = next;}
++
++      //adds an item to the array
++      void add(Item item){
++         itemArray[counter] = item;
++         counter++;
++      }
++
++      void addAt(int index,Item item){
++         itemArray[counter] = item;
++         for(int i = counter ; i > index ; i-- ){
++            swap(itemArray,i,i-1);
++         }
++         counter++;
++      }
++
++      private void swap(Item[] array,int x,int y){
++         Item temp = array[x];
++         array[x] = array[y];
++         array[y] = temp;
++      }
++
++      //removes an item from the array
++      Item remove(){
++         counter--;
++         Item item = itemArray[counter];
++         itemArray[counter] = null; //avoid loitering
++         return item;
++      }
++
++      Item removeAt(int index){
++         counter--;
++         Item item = itemArray[index];
++
++         for(int i = index +1 ; i <= counter ; i++){
++            swap(itemArray,i,i-1);
++         }
++         itemArray[counter] = null; //avoid loitering
++         return item;
++      }
++   }
++
++
++   private static class Stopwatch{
++      private final long start;
++
++      public Stopwatch(){ start = System.currentTimeMillis();}
++
++      public double elapsedTime(){
++         long now = System.currentTimeMillis();
++         return (now - start ) / 1000.0;
++      }
++   }
++
++   private static class Trial{
++      public static double add(int N, int nTimes,int singleTime, int blockSize){
++         int i = 0;
++         double result = 0;
++         var list = new UnrolledLinkedList<Double>(blockSize);
++         var array = randomDoubleArray(N);
++         for(int j = 0 ; j < N; j++)
++            list.add(array[j]);
++
++         while(i < nTimes) {
++            int x = (int) (Math.random() * N);
++            int y = x / 2;
++
++            var stopwatch = new Stopwatch();
++               for(int j = 0; j < singleTime; j++)
++                  list.addAt(y, 0.0);
++            double halfTime = stopwatch.elapsedTime() / singleTime;
++
++            for(int j = 0; j < singleTime; j++) {
++                  list.remove();
++               }
++
++            var stopwatch2 = new Stopwatch();
++            for(int j = 0; j < singleTime; j++)
++                  list.addAt(x,0.0);
++            double fullTime = stopwatch2.elapsedTime() / singleTime;
++
++            for(int j = 0; j < singleTime; j++){
++               list.remove();
++            }
++
++            result += fullTime / halfTime;
++            i++;
++         }
++
++         return result/nTimes;
++      }
++
++      public static double get(int N, int nTimes,int singleTime, int blockSize){
++         double result = 0;
++         var list = new UnrolledLinkedList<Double>(blockSize);
++         var array = randomDoubleArray(N);
++         for(int j = 0 ; j < N; j++)
++            list.add(array[j]);
++
++         int i = 0;
++         while(i < nTimes) {
++
++            int x = (int) (Math.random() * N);
++            int y = x / 2;
++
++            var stopwatch = new Stopwatch();
++            for(int j = 0; j < singleTime; j++)
++               list.get(y);
++            double halfTime = stopwatch.elapsedTime() / singleTime;
++
++            var stopwatch2 = new Stopwatch();
++            for(int j = 0; j < singleTime; j++)
++               list.get(x);
++            double fullTime = stopwatch2.elapsedTime() / singleTime;
++
++            result += fullTime / halfTime;
++            i++;
++         }
++
++         return result/nTimes;
++      }
++
++      public static double[] randomDoubleArray(int N){
++         var array = new double[N];
++         for(int i = 0; i < N ; i++)
++            array[i] = Math.random();
++
++         return array;
++      }
++
++   }
++}
+Index: AlgorithmsExercices/src/LinkedListDeque.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/AlgorithmsExercices/src/LinkedListDeque.java b/AlgorithmsExercices/src/LinkedListDeque.java
+new file mode 100644
+--- /dev/null	(revision a298662c6e5371a1430bcb8000430849ef2804c7)
++++ b/AlgorithmsExercices/src/LinkedListDeque.java	(revision a298662c6e5371a1430bcb8000430849ef2804c7)
+@@ -0,0 +1,178 @@
++//API
++/*
++
++public class Deque<Item> implements Iterable<Item>
++             Deque()               create an empty deque
++     boolean isEmpty()             is the deque empty?
++         int size()                number of items in the deque
++        void pushLeft(Item item)   add an item to the left end
++        void pushRight(Item item)  add an item to the right end
++         Item popLeft()            remove an item from the left end
++         Item popRight()           remove an item from the right end
++ */
++
++import java.util.*;
++
++public class LinkedListDeque<Item> implements Iterable<Item> {
++   int N;
++   Node head;
++   Node tail;
++
++   public static void main(String[] args) {
++
++      var deque = new LinkedListDeque<Integer>();
++
++      deque.pushLeft(1);
++      deque.pushLeft(2);
++      deque.pushRight(3);
++      deque.pushLeft(0);
++      deque.pushRight(5);
++
++      System.out.print(deque.popLeft() + " ");
++      System.out.print(deque.popLeft() + " ");
++
++
++      while(!deque.isEmpty())
++         System.out.print(deque.popRight() + " ");
++      System.out.println();
++
++
++      for(int i = 0; i < 30 ; i++){
++         deque.pushLeft(i);
++         deque.pushRight(i*2);
++      }
++
++      for(Integer a: deque)
++         System.out.print(a + " ");
++      System.out.println();
++
++      int i =0 ;
++      while(i < 25){
++         System.out.print(deque.popRight()+ " ");
++         i++;
++      }
++      System.out.println();
++
++      i =0 ;
++      while(i < 25){
++         System.out.print(deque.popLeft() + " ");
++         i++;
++      }
++      System.out.println();
++
++      for(Integer f : deque)
++         System.out.print(f + " ");
++      System.out.println();
++
++      while(!deque.isEmpty()) {
++         System.out.print(deque.popLeft() + " ");
++      }
++      System.out.println();
++
++      System.out.println(deque.isEmpty());
++
++      for(int j = 0; j < 30 ; j++){
++         deque.pushLeft(j);
++         deque.pushRight(j*2);
++      }
++
++      for(Integer f: deque)
++         System.out.print(f + " ");
++      System.out.println();
++
++   }
++
++   boolean isEmpty(){
++      return head == null;
++   }
++
++   int size(){
++      return N;
++   }
++
++   void pushLeft(Item item){
++      if(head == null){
++         head = new Node(item);
++         head.previous = null;
++         head.next = null;
++         tail = head;
++      }
++      else {
++         head = new Node(item, null, head);
++         head.next.previous = head;
++      }
++      N++;
++   }
++
++   void pushRight(Item item){
++      if(tail == null){
++         tail = new Node(item);
++         tail.previous = null;
++         tail.next = null;
++         head = tail;
++      }
++      else {
++         tail = new Node(item, tail, null);
++         tail.previous.next = tail;
++      }
++      N++;
++   }
++
++   Item popLeft(){
++      if(head == null)
++         throw new ArrayIndexOutOfBoundsException();
++
++      Item item = head.item;
++      head = head.next;
++      if(head != null)
++         head.previous = null;
++      else
++         tail = null;
++      N--;
++      return item;
++   }
++
++   Item popRight(){
++      if(head == null)
++         throw new ArrayIndexOutOfBoundsException();
++
++      Item item = tail.item;
++      tail = tail.previous;
++      if(tail != null)
++         tail.next = null;
++      else
++         head = null;
++      N--;
++      return item;
++   }
++
++   private class Node{
++      Item item;
++      Node next;
++      Node previous;
++      Node(Item item){this.item = item;}
++      Node(Item item,Node previous,Node next){this.item = item;this.previous = previous; this.next = next;}
++   }
++
++   public Iterator<Item> iterator(){
++      return new dequeIterator();
++   }
++
++   private class dequeIterator implements Iterator<Item>{
++      Node current;
++
++      dequeIterator(){current = head;}
++
++      public boolean hasNext(){
++         return current != null;
++      }
++
++      public Item next(){
++         Item item = current.item;
++         current = current.next;
++         return item;
++      }
++
++      public void delete(){}
++   }
++}
+Index: AlgorithmsExercices/src/QueueCircularLinkedList.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/AlgorithmsExercices/src/QueueCircularLinkedList.java b/AlgorithmsExercices/src/QueueCircularLinkedList.java
+new file mode 100644
+--- /dev/null	(revision a298662c6e5371a1430bcb8000430849ef2804c7)
++++ b/AlgorithmsExercices/src/QueueCircularLinkedList.java	(revision a298662c6e5371a1430bcb8000430849ef2804c7)
+@@ -0,0 +1,108 @@
++//Implements the queue API
++/*
++FIFO Queue
++
++public class QueueCircularLinkedList<Item> implements Iterable<Item>
++             QueueCircularLinkedList()        creates a empty queue
++        void enqueue(Item item)               add an Item
++        Item dequeue()                        remove the least recently added Item
++     boolean isEmpty()                        is the queue empty
++         int size()                           number of items in the queue
++*/
++
++import java.util.*;
++import java.util.concurrent.Callable;
++import java.util.stream.*;
++
++
++public class QueueCircularLinkedList<Item> implements Iterable<Item>{
++   private Node last;
++   private int N;
++
++
++   public static void main(String[] args){
++      var list = new QueueCircularLinkedList<Integer>();
++
++      int i = 0;
++      while(i < 10)
++      list.enqueue(i++);
++
++      for(int a : list)
++         System.out.println(a);
++   }
++
++   QueueCircularLinkedList(){}
++
++   void enqueue(Item item){
++      if(last == null){
++         last = new Node(item);
++         last.next = last;
++      }
++      else {
++         last.next = new Node(item, last.next);
++         last = last.next;
++      }
++      N++;
++   }
++
++   Item dequeue(){
++      N--;
++      if(last == null)
++         throw new ArrayIndexOutOfBoundsException();
++
++      if(last.next == last){
++         Item item = last.item;
++         last = null;
++         return item;
++      }
++
++      Item item = last.next.item;
++      last.next = last.next.next;
++
++      return item;
++   }
++
++   boolean isEmpty(){
++      return last == null;
++   }
++
++   int size(){
++      return N;
++   }
++
++   public Iterator<Item> iterator(){
++      return new CircularListIterator();
++   }
++
++   private class Node{
++      Item item;
++      Node next;
++
++      Node(Item item){this.item = item;}
++      Node(Item item,Node next){this.item = item ; this.next = next;}
++   }
++
++   private class CircularListIterator implements Iterator<Item>{
++      Node current = last.next;
++      Node head = last.next;
++
++      CircularListIterator(){last.next = null;}
++
++      public boolean hasNext() {
++         if(current != null)
++            return true;
++         else {
++            last.next = head;
++            return false;
++         }
++      }
++
++      public Item next() {
++         Item item = current.item;
++         current = current.next;
++         return item;
++      }
++
++      public void delete(){}
++   }
++}
+Index: AlgorithmsExercices/src/ResizingArrayDeque.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/AlgorithmsExercices/src/ResizingArrayDeque.java b/AlgorithmsExercices/src/ResizingArrayDeque.java
+new file mode 100644
+--- /dev/null	(revision a298662c6e5371a1430bcb8000430849ef2804c7)
++++ b/AlgorithmsExercices/src/ResizingArrayDeque.java	(revision a298662c6e5371a1430bcb8000430849ef2804c7)
+@@ -0,0 +1,209 @@
++//API
++/*
++
++public class Deque<Item> implements Iterable<Item>
++             Deque()               create an empty deque
++     boolean isEmpty()             is the deque empty?
++         int size()                number of items in the deque
++        void pushLeft(Item item)   add an item to the left end
++        void pushRight(Item item)  add an item to the right end
++         Item popLeft()            remove an item from the left end
++         Item popRight()           remove an item from the right end
++ */
++
++import java.util.*;
++
++public class ResizingArrayDeque<Item> implements Iterable<Item> {
++   Item[] array;
++   int rightIndex; // it points to the next null element on the right
++   int leftIndex; // it points to the next null element on the left
++   int N; //size
++
++   public static void main(String[] args){
++
++      var deque = new ResizingArrayDeque<Integer>();
++
++      deque.pushLeft(1);
++      deque.pushLeft(2);
++      deque.pushRight(3);
++      deque.pushLeft(0);
++      deque.pushRight(5);
++
++      System.out.print(deque.popLeft() + " ");
++      System.out.print(deque.popLeft() + " ");
++
++
++      while(!deque.isEmpty())
++         System.out.print(deque.popRight() + " ");
++      System.out.println();
++
++
++      for(int i = 0; i < 30 ; i++){
++         deque.pushLeft(i);
++         deque.pushRight(i*2);
++      }
++
++      for(Integer a: deque)
++         System.out.print(a + " ");
++      System.out.println();
++
++      int i =0 ;
++      while(i < 25){
++         System.out.print(deque.popRight()+ " ");
++         i++;
++      }
++      System.out.println();
++
++      i =0 ;
++      while(i < 25){
++         System.out.print(deque.popLeft() + " ");
++         i++;
++      }
++      System.out.println();
++
++      for(Integer f : deque)
++         System.out.print(f + " ");
++      System.out.println();
++
++      while(!deque.isEmpty()) {
++         System.out.print(deque.popLeft() + " ");
++      }
++      System.out.println();
++
++      System.out.println(deque.isEmpty());
++
++      for(int j = 0; j < 30 ; j++){
++         deque.pushLeft(j);
++         deque.pushRight(j*2);
++      }
++
++      for(Integer f: deque)
++         System.out.print(f + " ");
++      System.out.println();
++
++   }
++
++   @SuppressWarnings("unchecked")
++   ResizingArrayDeque(){
++      array = (Item[]) new Object[11]; //odd length is more appropriate for this data structure
++      rightIndex = array.length/2;
++      leftIndex = rightIndex;
++   }
++
++   boolean isEmpty(){
++      return N == 0;
++   }
++
++   int size(){
++      return N;
++   }
++
++   void pushLeft(Item item){
++      if(leftIndex == -1) {
++         expand();
++      }
++
++      array[leftIndex] = item;
++      if(leftIndex == rightIndex)
++         rightIndex++;
++      leftIndex--;
++      N++;
++   }
++
++   void pushRight(Item item){
++      if(rightIndex == array.length) {
++         expand();
++      }
++
++      array[rightIndex] = item;
++      if(leftIndex == rightIndex)
++         leftIndex--;
++      rightIndex++;
++      N++;
++   }
++
++   Item popLeft(){
++      if(N == 0)
++         throw new ArrayIndexOutOfBoundsException();
++
++      leftIndex++;
++      Item item = array[leftIndex];
++      array[leftIndex] = null;
++
++      if(array.length/4 > N && N > 11)
++         shrink();
++
++      N--;
++      return item;
++   }
++
++   Item popRight(){
++      if(N == 0)
++         throw new ArrayIndexOutOfBoundsException();
++
++      rightIndex--;
++      Item item = array[rightIndex];
++      array[rightIndex] = null;
++
++      if(array.length/4 > N && N > 11)
++         shrink();
++
++      N--;
++      return item;
++   }
++
++   //doubles the size
++   private void expand(){
++      @SuppressWarnings("unchecked")
++      Item[] newArray = (Item[]) new Object[array.length*2];
++
++      int newLeftIndex = newArray.length/2 - N/2;
++      int newRightIndex = newArray.length/2 + N/2;
++
++      if(array.length == rightIndex)
++         newRightIndex++;
++
++      leftIndex++;
++
++      for(int i = 0; i < N ; i++)
++         newArray[newLeftIndex + i] = array[leftIndex + i];
++
++      array = newArray;
++      leftIndex = newLeftIndex -1;
++      rightIndex = newRightIndex ;
++   }
++
++   private void shrink(){
++      @SuppressWarnings("unchecked")
++      Item[] newArray = (Item[]) new Object[array.length/2];
++
++      int newLeftIndex = newArray.length/2 - N/2;
++      int newRightIndex = newArray.length/2 + N/2;
++
++      leftIndex++; //to be able to access the elements
++
++      for(int i = 0; i < N; i++)
++         newArray[newLeftIndex + i] = array[leftIndex + i];
++
++      array = newArray;
++      leftIndex = newLeftIndex -1;
++      rightIndex = newRightIndex ;
++   }
++
++
++   public Iterator<Item> iterator() {
++      return new ResizingArrayDequeIterator();
++   }
++
++   private class ResizingArrayDequeIterator implements Iterator<Item>{
++      int currentIndex = leftIndex +1;
++
++      public boolean hasNext() {
++         return currentIndex != rightIndex;
++      }
++
++      public Item next() {
++         return array[currentIndex++];
++      }
++   }
++}
